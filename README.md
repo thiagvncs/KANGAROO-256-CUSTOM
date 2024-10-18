@@ -244,7 +244,13 @@ Example with a 65bit key:
 [+] Done: Total time 01:13 
 
 ```
-All the public address and privatekeys will be saved in the file KEYFOUNDKEYFOUND.txt of your current directory.
+All the public address and privatekeys will be saved in the file PrivateKeyFOUND.txt of your current directory.
+
+**Donate to:**
+
+
+**btc: bc1qxs47ttydl8tmdv8vtygp7dy76lvayz3r6rdahu**
+
 
 # Articles
 
