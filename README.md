@@ -1,4 +1,4 @@
-# KANGAROO-256-CUSTOM
+# Pollard's kangaroo for SECPK1
 
 This 256bit version is based on:
 
@@ -11,8 +11,6 @@ https://github.com/ZenulAbidin/Kangaroo-256    (said to be buggy and not finishe
 https://github.com/Totulik/Kangaroo-254-bit
 
 https://github.com/AlberTajuelo/kangaroo
-
-https://github.com/mikorist/Kangaroo-256-bit
 
 A Pollard's kangaroo interval ECDLP solver for SECP256K1 (based on VanitySearch engine).
 
@@ -241,3 +239,17 @@ Example with a 65bit key:
 [+] SolveKeyCPU Thread 05: 1024 kangaroos
 [+] [55.52 MK/s][GPU 0.00 MK/s][Count 2^31.71][Dead 1][01:12 (Avg 02:45)][9.4/22.2MB] 
 [+] Done: Total time 01:13 
+
+```
+All the public address and privatekeys will be saved in the file KEYFOUNDKEYFOUND.txt of your current directory.
+
+# Articles
+
+ - [1] Using Equivalence Classes to Accelerate Solvingthe Discrete Logarithm Problem in a Short Interval\
+       https://www.iacr.org/archive/pkc2010/60560372/60560372.pdf
+ - [2] Kangaroo Methods for Solving theInterval Discrete Logarithm Problem\
+       https://arxiv.org/pdf/1501.07019.pdf
+ - [3] Factoring and Discrete Logarithms using Pseudorandom Walks\
+       https://www.math.auckland.ac.nz/~sgal018/crypto-book/ch14.pdf
+ - [4] Kangaroos, Monopoly and Discrete Logarithms\
+       https://web.northeastern.edu/seigen/11Magic/KruskalsCount/PollardKangarooMonopoly.pdf
