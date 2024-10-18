@@ -12,6 +12,9 @@ https://github.com/Totulik/Kangaroo-254-bit
 
 https://github.com/AlberTajuelo/kangaroo
 
+https://github.com/mikorist/Kangaroo-256-bit
+
+
 A Pollard's kangaroo interval ECDLP solver for SECP256K1 (based on VanitySearch engine).
 
 # Feature
