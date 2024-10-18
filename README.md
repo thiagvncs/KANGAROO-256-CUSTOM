@@ -6,7 +6,7 @@ https://github.com/JeanLucPons/Kangaroo        125bit version
 
 With ideas from:
 
-https://github.com/ZenulAbidin/Kangaroo-256    (said to be buggy and not finished)
+https://github.com/ZenulAbidin/Kangaroo-256    
 
 https://github.com/Totulik/Kangaroo-254-bit
 
