@@ -26,6 +26,8 @@ A Pollard's kangaroo interval ECDLP solver for SECP256K1 (based on VanitySearch 
   <li>Multi-GPU support.</li>
   <li>CUDA optimisation via inline PTX assembly.</li>
   <li>Full 256-bit interval search.</li>
+  <li>Improved automatic dp selection based on range.</li>
+  <li>Improved jump section for a more controlled success rate.</li>
 </ul>
 
 # Discussion Thread
@@ -53,7 +55,6 @@ Kangaroo [-v] [-t nbThread] [-d dpBit] [gpu] [-check]
  -i workfile: Specify file to load work from (current processed key only)
  -wi workInterval: Periodic interval (in seconds) for saving work
  -ws: Save kangaroos in the work file
- -wss: Save kangaroos via the server
  -wsplit: Split work file of server and reset hashtable
  -wm file1 file2 destfile: Merge work file
  -wmdir dir destfile: Merge directory of work files
@@ -62,10 +63,6 @@ Kangaroo [-v] [-t nbThread] [-d dpBit] [gpu] [-check]
  -wpartcreate name: Create empty partitioned work file (name is a directory)
  -wcheck worfile: Check workfile integrity
  -m maxStep: number of operations before give up the search (maxStep*expected operation)
- -s: Start in server mode
- -c server_ip: Start in client mode and connect to server server_ip
- -sp port: Server port, default is 17403
- -nt timeout: Network timeout in millisec (default is 3000ms)
  -o fileName: output result to fileName
  -l: List cuda enabled devices
  -check: Check GPU kernel vs CPU
