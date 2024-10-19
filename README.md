@@ -30,7 +30,7 @@ A Pollard's kangaroo interval ECDLP solver for SECP256K1 (based on VanitySearch 
 
 # Discussion Thread
 
-Discusion thread: https://bitcointalk.org/index.php?topic=5244940.0
+Discusion thread: https://bitcointalk.org/index.php?topic=5513657
 
 # Usage
 
