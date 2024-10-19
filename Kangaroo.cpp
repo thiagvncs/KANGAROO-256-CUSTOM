@@ -486,33 +486,29 @@ void Kangaroo::CreateJumpTable() {
     int maxRetry = 100;
     bool ok = false;
     double distAvg;
+
+    unsigned long seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(seed);
+    int seedValue = 363878;
+    double desiredDeviation = seedValue;
+
     double maxAvg = pow(2.0, (double)jumpBit - 0.85);
     double minAvg = pow(2.0, (double)jumpBit - 1.05);
-    double desiredDeviation = 1000.0; 
-
     double distances[NB_JUMP];
-
-    std::default_random_engine generator;
-    std::normal_distribution<double> distribution(pow(2, jumpBit) / 2.0, pow(2, jumpBit - 1) / 2.0);
-
-    rseed(0x600DCAFE);
+    std::normal_distribution<double> dist(pow(2, jumpBit) / 2.0, pow(2, jumpBit - 1) / 2.0);
 
     while (!ok && maxRetry > 0) {
         Int totalDist;
         totalDist.SetInt32(0);
-
         for (int i = 0; i < NB_JUMP; ++i) {
-            double jumpValue = distribution(generator);
+            double jumpValue = dist(generator);
             jumpValue = std::max(1.0, jumpValue);
             jumpDistance[i].SetInt32(static_cast<int>(jumpValue));
-
             totalDist.Add(&jumpDistance[i]);
             distances[i] = jumpDistance[i].ToDouble();
         }
-
         distAvg = totalDist.ToDouble() / (double)(NB_JUMP);
         double deviation = calculateDeviation(distances, NB_JUMP);
-
         ok = distAvg > minAvg && distAvg < maxAvg && deviation < desiredDeviation;
         maxRetry--;
     }
@@ -524,8 +520,6 @@ void Kangaroo::CreateJumpTable() {
     }
 
     ::printf("[+] Jump Avg distance: 2^%.2f, Deviation: %.2f\n", log2(distAvg), calculateDeviation(distances, NB_JUMP));
-    unsigned long seed = Timer::getSeed32();
-    rseed(seed);
 }
 
 double Kangaroo::calculateDeviation(double* distances, int size) {
