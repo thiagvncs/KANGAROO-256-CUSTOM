@@ -35,6 +35,10 @@ Discusion thread: https://bitcointalk.org/index.php?topic=5244940.0
 # Usage
 
 ```
+./kangaroo-256 55.txt
+```
+
+```
 Kangaroo v2.3
 Kangaroo [-v] [-t nbThread] [-d dpBit] [gpu] [-check]
          [-gpuId gpuId1[,gpuId2,...]] [-g g1x,g1y[,g2x,g2y,...]]
@@ -157,6 +161,8 @@ Here is an illustration of what's happening. When 2 paths collide they form a sh
 ![Paths](DOC/paths.jpg)
 
 # Compilation
+
+**compile using WSL on Windows**
 
 Compilation Commands:
 ```
