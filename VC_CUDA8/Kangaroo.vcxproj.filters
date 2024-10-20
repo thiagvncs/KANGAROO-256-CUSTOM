@@ -26,7 +26,6 @@
     </ClCompile>
     <ClCompile Include="..\Check.cpp" />
     <ClCompile Include="..\Backup.cpp" />
-    <ClCompile Include="..\Network.cpp" />
     <ClCompile Include="..\PartMerge.cpp" />
     <ClCompile Include="..\Merge.cpp" />
   </ItemGroup>
