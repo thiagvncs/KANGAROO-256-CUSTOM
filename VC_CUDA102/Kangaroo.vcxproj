@@ -34,7 +34,6 @@
     <ClCompile Include="..\Check.cpp" />
     <ClCompile Include="..\HashTable.cpp" />
     <ClCompile Include="..\Merge.cpp" />
-    <ClCompile Include="..\Network.cpp" />
     <ClCompile Include="..\PartMerge.cpp" />
     <ClCompile Include="..\SECPK1\Int.cpp" />
     <ClCompile Include="..\SECPK1\IntGroup.cpp" />
