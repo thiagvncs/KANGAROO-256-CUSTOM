@@ -523,6 +523,8 @@ void Kangaroo::CreateJumpTable() {
     ::printf("[+] Jump Avg distance: 2^%.2f, Deviation: %.2f\n", log2(distAvg), calculateDeviation(distances, NB_JUMP));
 }
 
+
+
 double Kangaroo::calculateDeviation(double* distances, int size) {
     double sum = 0.0, mean, deviation = 0.0;
 
@@ -586,101 +588,115 @@ void Kangaroo::InitSearchKey() {
 }
 
 void Kangaroo::Run(int nbThread, std::vector<int> gpuId, std::vector<int> gridSize) {
-  double t0 = Timer::get_tick();
-  nbCPUThread = nbThread;
-  nbGPUThread = (useGpu ? (int)gpuId.size() : 0);
-  totalRW = 0;
+    double t0 = Timer::get_tick();
+    nbCPUThread = nbThread;
+    nbGPUThread = (useGpu ? (int)gpuId.size() : 0);
+    totalRW = 0;
 #ifndef WITHGPU
-  if (nbGPUThread > 0) {
-    ::printf("GPU code not compiled, use -DWITHGPU when compiling.\n");
-    nbGPUThread = 0;
-  }
-#endif
-  uint64_t totalThread = (uint64_t)nbCPUThread + (uint64_t)nbGPUThread;
-  if (totalThread == 0) {
-    ::printf("No CPU or GPU thread, exiting.\n");
-    ::exit(0);
-  }
-  TH_PARAM *params = (TH_PARAM *)malloc(totalThread * sizeof(TH_PARAM));
-  THREAD_HANDLE *thHandles = (THREAD_HANDLE *)malloc(totalThread * sizeof(THREAD_HANDLE));
-  memset(params, 0, totalThread * sizeof(TH_PARAM));
-  memset(counters, 0, sizeof(counters));
-  ::printf("[+] Number of CPU thread: %d\n", nbCPUThread);
-#ifdef WITHGPU
-  for (int i = 0; i < nbGPUThread; i++) {
-    int x = gridSize[2ULL * i];
-    int y = gridSize[2ULL * i + 1ULL];
-    if (!GPUEngine::GetGridSize(gpuId[i], &x, &y)) {
-      free(params);
-      free(thHandles);
-      return;
-    } else {
-      params[nbCPUThread + i].gridSizeX = x;
-      params[nbCPUThread + i].gridSizeY = y;
+    if (nbGPUThread > 0) {
+        ::printf("GPU code not compiled, use -DWITHGPU when compiling.\n");
+        nbGPUThread = 0;
     }
-    params[nbCPUThread + i].nbKangaroo = (uint64_t)GPU_GRP_SIZE * x * y;
-    totalRW += params[nbCPUThread + i].nbKangaroo;
-  }
 #endif
-  totalRW += nbCPUThread * (uint64_t)CPU_GRP_SIZE;
-  InitRange();
-  CreateJumpTable();
-  ::printf("[+] Number of kangaroos: 2^%.2f\n", log2((double)totalRW));
-  keyIdx = 0;
-  InitSearchKey();
-  SetDP(initDPSize);
-  FectchKangaroos(params);
-#ifdef STATS
-  CPU_GRP_SIZE = 1024;
-  for (; CPU_GRP_SIZE <= 1024; CPU_GRP_SIZE *= 4) {
-    uint64_t totalCount = 0;
-    uint64_t totalDead = 0;
-#endif
-    for (keyIdx = 0; keyIdx < keysToSearch.size(); keyIdx++) {
-      InitSearchKey();
-      endOfSearch = false;
-      collisionInSameHerd = 0;
-      memset(counters, 0, sizeof(counters));
-      for (int i = 0; i < nbCPUThread; i++) {
-        params[i].threadId = i;
-        params[i].isRunning = true;
-        thHandles[i] = LaunchThread([](void* p) -> void* {
-          TH_PARAM* param = static_cast<TH_PARAM*>(p);
-          param->obj->SolveKeyCPU(param);
-          return nullptr;
-        }, params + i);
-      }
-
-#ifdef WITHGPU
-      for (int i = 0; i < nbGPUThread; i++) {
-        int id = nbCPUThread + i;
-        params[id].threadId = 0x80L + i;
-        params[id].isRunning = true;
-        params[id].gpuId = gpuId[i];
-        thHandles[id] = LaunchThread(_SolveKeyGPU, params + id);
-      }
-#endif
-
-      Process(params, "MK/s");
-      JoinThreads(thHandles, nbCPUThread + nbGPUThread);
-      FreeHandles(thHandles, nbCPUThread + nbGPUThread);
-      hashTable.Reset();
-#ifdef STATS
-      uint64_t count = getCPUCount() + getGPUCount();
-      totalCount += count;
-      totalDead += collisionInSameHerd;
-      double SN = pow(2.0, rangePower / 2.0);
-      double avg = (double)totalCount / (double)(keyIdx + 1);
-      ::printf("\n[+] [%3d] 2^%.3f Dead:%d Avg:2^%.3f DeadAvg:%.1f (%.3f %.3f sqrt(N))\n",
-               keyIdx, log2((double)count), (int)collisionInSameHerd, log2(avg),
-               (double)totalDead / (double)(keyIdx + 1), avg / SN, expectedNbOp / SN);
+    uint64_t totalThread = (uint64_t)nbCPUThread + (uint64_t)nbGPUThread;
+    if (totalThread == 0) {
+        ::printf("No CPU or GPU thread, exiting.\n");
+        ::exit(0);
     }
-    string fName = "DP" + ::to_string(dpSize) + ".txt";
-    FILE *f = fopen(fName.c_str(), "a");
-    fprintf(f, "[+] %d %f\n", CPU_GRP_SIZE * nbCPUThread, (double)totalCount);
-    fclose(f);
+
+    TH_PARAM *params = (TH_PARAM *)malloc(totalThread * sizeof(TH_PARAM));
+    THREAD_HANDLE *thHandles = (THREAD_HANDLE *)malloc(totalThread * sizeof(THREAD_HANDLE));
+    memset(params, 0, totalThread * sizeof(TH_PARAM));
+    memset(counters, 0, sizeof(counters));
+
+    ::printf("[+] Number of CPU thread: %d\n", nbCPUThread);
+#ifdef WITHGPU
+    for (int i = 0; i < nbGPUThread; i++) {
+        int x = gridSize[2ULL * i];
+        int y = gridSize[2ULL * i + 1ULL];
+        if (!GPUEngine::GetGridSize(gpuId[i], &x, &y)) {
+            free(params);
+            free(thHandles);
+            return;
+        } else {
+            params[nbCPUThread + i].gridSizeX = x;
+            params[nbCPUThread + i].gridSizeY = y;
+        }
+        params[nbCPUThread + i].nbKangaroo = (uint64_t)GPU_GRP_SIZE * x * y;
+        totalRW += params[nbCPUThread + i].nbKangaroo;
+    }
 #endif
-  }
-  double t1 = Timer::get_tick();
-  ::printf("\n[+] Done: Total time %s \n", GetTimeStr(t1 - t0 + offsetTime).c_str());
+    totalRW += nbCPUThread * (uint64_t)CPU_GRP_SIZE;
+    InitRange();
+    CreateJumpTable();
+    ::printf("[+] Number of kangaroos: 2^%.2f\n", log2((double)totalRW));
+    
+    int suggestedDP = initDPSize;
+    double dpOverHead;
+    ComputeExpected((double)suggestedDP, &expectedNbOp, &expectedMem, &dpOverHead);
+    while (dpOverHead > 1.05 && suggestedDP > 0) {
+        suggestedDP--;
+        ComputeExpected((double)suggestedDP, &expectedNbOp, &expectedMem, &dpOverHead);
+    }
+    if (initDPSize < 0) initDPSize = suggestedDP;
+    ComputeExpected((double)initDPSize, &expectedNbOp, &expectedMem);
+    
+    ::printf("[+] Expected operations: 2^%.2f\n", log2(expectedNbOp));
+    
+    keyIdx = 0;
+    InitSearchKey();
+    SetDP(initDPSize);
+    FectchKangaroos(params);
+
+#ifdef STATS
+    CPU_GRP_SIZE = 1024;
+    for (; CPU_GRP_SIZE <= 1024; CPU_GRP_SIZE *= 4) {
+        uint64_t totalCount = 0;
+        uint64_t totalDead = 0;
+#endif
+        for (keyIdx = 0; keyIdx < keysToSearch.size(); keyIdx++) {
+            InitSearchKey();
+            endOfSearch = false;
+            collisionInSameHerd = 0;
+            memset(counters, 0, sizeof(counters));
+            for (int i = 0; i < nbCPUThread; i++) {
+                params[i].threadId = i;
+                params[i].isRunning = true;
+                thHandles[i] = LaunchThread([](void* p) -> void* {
+                    TH_PARAM* param = static_cast<TH_PARAM*>(p);
+                    param->obj->SolveKeyCPU(param);
+                    return nullptr;
+                }, params + i);
+            }
+#ifdef WITHGPU
+            for (int i = 0; i < nbGPUThread; i++) {
+                int id = nbCPUThread + i;
+                params[id].threadId = 0x80L + i;
+                params[id].isRunning = true;
+                params[id].gpuId = gpuId[i];
+                thHandles[id] = LaunchThread(_SolveKeyGPU, params + id);
+            }
+#endif
+            Process(params, "MK/s");
+            JoinThreads(thHandles, nbCPUThread + nbGPUThread);
+            FreeHandles(thHandles, nbCPUThread + nbGPUThread);
+            hashTable.Reset();
+#ifdef STATS
+            uint64_t count = getCPUCount() + getGPUCount();
+            totalCount += count;
+            totalDead += collisionInSameHerd;
+            double SN = pow(2.0, rangePower / 2.0);
+            double avg = (double)totalCount / (double)(keyIdx + 1);
+            ::printf("\n[+] [%3d] 2^%.3f Dead:%d Avg:2^%.3f DeadAvg:%.1f (%.3f %.3f sqrt(N))\n",
+                     keyIdx, log2((double)count), (int)collisionInSameHerd, log2(avg),
+                     (double)totalDead / (double)(keyIdx + 1), avg / SN, expectedNbOp / SN);
+        }
+        string fName = "DP" + ::to_string(dpSize) + ".txt";
+        FILE *f = fopen(fName.c_str(), "a");
+        fprintf(f, "[+] %d %f\n", CPU_GRP_SIZE * nbCPUThread, (double)totalCount);
+        fclose(f);
+#endif
+    }
+    double t1 = Timer::get_tick();
+    ::printf("\n[+] Done: Total time %s \n", GetTimeStr(t1 - t0 + offsetTime).c_str());
 }
