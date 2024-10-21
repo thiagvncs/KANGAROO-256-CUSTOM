@@ -10,24 +10,26 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #endif
+
 using namespace std;
 
 // ----------------------------------------------------------------------------
 int Kangaroo::FSeek(FILE* stream, uint64_t pos) {
 #ifdef WIN64
-  return _fseeki64(stream, pos, SEEK_SET);
+    return _fseeki64(stream, pos, SEEK_SET);
 #else
-  return fseeko(stream, pos, SEEK_SET);
+    return fseeko(stream, pos, SEEK_SET);
 #endif
 }
 
 uint64_t Kangaroo::FTell(FILE* stream) {
 #ifdef WIN64
-  return (uint64_t)_ftelli64(stream);
+    return (uint64_t)_ftelli64(stream);
 #else
-  return (uint64_t)ftello(stream);
+    return (uint64_t)ftello(stream);
 #endif
 }
+
 bool Kangaroo::IsEmpty(std::string fileName) {
     FILE *pFile = fopen(fileName.c_str(), "r");
     if (pFile == NULL) {
@@ -40,7 +42,6 @@ bool Kangaroo::IsEmpty(std::string fileName) {
     fclose(pFile);
     return size == 0;
 }
-
 int Kangaroo::IsDir(string dirName) {
     bool isDir = 0;
 #ifdef WIN64
@@ -63,6 +64,7 @@ int Kangaroo::IsDir(string dirName) {
 #endif
     return isDir;
 }
+
 FILE *Kangaroo::ReadHeader(std::string fileName, uint32_t *version, int type) {
     FILE *f = fopen(fileName.c_str(), "rb");
     if (f == NULL) {
@@ -72,7 +74,6 @@ FILE *Kangaroo::ReadHeader(std::string fileName, uint32_t *version, int type) {
     }
     uint32_t head;
     uint32_t versionF;
-
     if (fread(&head, sizeof(uint32_t), 1, f) != 1) {
         printf("ReadHeader: Cannot read from %s\n", fileName.c_str());
         if (feof(f)) {
@@ -102,14 +103,14 @@ FILE *Kangaroo::ReadHeader(std::string fileName, uint32_t *version, int type) {
     }
     return f;
 }
+
 bool Kangaroo::LoadWork(string &fileName) {
     double t0 = Timer::get_tick();
     printf("Loading: %s\n", fileName.c_str());
-
     fRead = ReadHeader(fileName, NULL, HEADK);
     if (fRead == NULL)
         return false;
-    
+
     fread(&nbLoadedWalk, sizeof(uint64_t), 1, fRead);
     double t1 = Timer::get_tick();
     printf("LoadWork: [HashTable %s] [%s]\n", hashTable.GetSizeInfo().c_str(), GetTimeStr(t1 - t0).c_str());
@@ -130,6 +131,7 @@ void Kangaroo::FetchWalks(uint64_t nbWalk, Int *x, Int *y, Int *d) {
         CreateHerd((int)empty, &(x[n]), &(y[n]), &(d[n]), TAME);
     }
 }
+
 void Kangaroo::FetchWalks(uint64_t nbWalk, std::vector<int256_t>& kangs, Int* x, Int* y, Int* d) {
     uint64_t n = 0;
     uint64_t avail = (nbWalk < kangs.size()) ? nbWalk : kangs.size();
@@ -194,7 +196,7 @@ void Kangaroo::FectchKangaroos(TH_PARAM *threads) {
         printf("Done\n");
         double eFetch = Timer::get_tick();
         if (nbLoadedWalk != 0) {
-            printf("FectchKangaroos: Warning %.0f unhandled kangaroos !\n", (double)nbLoadedWalk);
+            printf("FectchKangaroos: Warning %.0f unhandled kangaroos!\n", (double)nbLoadedWalk);
         }
         if (nbSaved < totalRW)
             created = totalRW - nbSaved;
@@ -202,6 +204,7 @@ void Kangaroo::FectchKangaroos(TH_PARAM *threads) {
     }
     if (fRead) fclose(fRead);
 }
+
 bool Kangaroo::SaveHeader(string fileName, FILE* f, int type, uint64_t totalCount, double totalTime) {
     uint32_t head = type;
     uint32_t version = 0;
@@ -243,7 +246,7 @@ void Kangaroo::SaveWork(uint64_t totalCount, double totalTime, TH_PARAM *threads
     }
     if (timeout <= 0) {
         if (!endOfSearch)
-            printf("\nSaveWork timeout !\n");
+            printf("\nSaveWork timeout!\n");
         UNLOCK(saveMutex);
         return;
     }
@@ -291,35 +294,20 @@ void Kangaroo::SaveWork(uint64_t totalCount, double totalTime, TH_PARAM *threads
     printf("done [%.1f MB] [%s] %s", (double)size / (1024.0 * 1024.0), GetTimeStr(t1 - t0).c_str(), ctimeBuff);
 }
 
-
 void Kangaroo::WorkInfo(std::string &fName) {
     int isDir = IsDir(fName);
-    if (isDir < 0)
-        return;
-
+    if (isDir < 0) return;
     string fileName = fName;
-    if (isDir)
-        fileName = fName + "/header";
-
+    if (isDir) fileName = fName + "/header";
     printf("Loading: %s\n", fileName.c_str());
     uint32_t version;
     FILE *f1 = ReadHeader(fileName, &version, HEADW);
-    if (f1 == NULL)
-        return;
-
+    if (f1 == NULL) return;
 #ifndef WIN64
     int fd = fileno(f1);
     posix_fadvise(fd, 0, 0, POSIX_FADV_RANDOM | POSIX_FADV_NOREUSE);
 #endif
-
-    uint32_t dp1;
-    Point k1;
-    uint64_t count1;
-    double time1;
-    Int RS1;
-    Int RE1;
-
-    // Read global param
+    uint32_t dp1; Point k1; uint64_t count1; double time1; Int RS1, RE1;
     fread(&dp1, sizeof(uint32_t), 1, f1);
     fread(&RS1.bits64, 32, 1, f1); RS1.bits64[4] = 0;
     fread(&RE1.bits64, 32, 1, f1); RE1.bits64[4] = 0;
@@ -343,7 +331,6 @@ void Kangaroo::WorkInfo(std::string &fName) {
     } else {
         hashTable.SeekNbItem(f1);
     }
-
     printf("Version   : %d\n", version);
     printf("DP bits   : %d\n", dp1);
     printf("Start     : %s\n", RS1.GetBase16().c_str());
