@@ -33,7 +33,6 @@
     <ClCompile Include="..\Backup.cpp" />
     <ClCompile Include="..\Check.cpp" />
     <ClCompile Include="..\HashTable.cpp" />
-    <ClCompile Include="..\Network.cpp" />
     <ClCompile Include="..\SECPK1\Int.cpp" />
     <ClCompile Include="..\SECPK1\IntGroup.cpp" />
     <ClCompile Include="..\SECPK1\IntMod.cpp" />
