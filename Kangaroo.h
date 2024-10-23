@@ -1,6 +1,8 @@
 #ifndef KANGAROOH
 #define KANGAROOH
 
+#include <functional>
+
 #ifdef WIN64
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -130,6 +132,9 @@ public:
   // Threaded procedures
   void SolveKeyCPU(TH_PARAM *p);
   void SolveKeyGPU(TH_PARAM *p);
+  THREAD_HANDLE LaunchThread(std::function<void(TH_PARAM*)> func, TH_PARAM *p);
+
+    
   bool HandleRequest(TH_PARAM *p);
   bool MergePartition(TH_PARAM* p);
   bool CheckPartition(TH_PARAM* p);
