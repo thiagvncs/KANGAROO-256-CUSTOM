@@ -1,43 +1,35 @@
 ifdef gpu
-
 SRC = SECPK1/IntGroup.cpp main.cpp SECPK1/Random.cpp \
-      Timer.cpp SECPK1/Int.cpp SECPK1/IntMod.cpp \
-      SECPK1/Point.cpp SECPK1/SECP256K1.cpp \
-      GPU/GPUEngine.o Kangaroo.cpp HashTable.cpp \
-      Backup.cpp Thread.cpp Check.cpp Merge.cpp PartMerge.cpp
-
+	Timer.cpp SECPK1/Int.cpp SECPK1/IntMod.cpp \
+	SECPK1/Point.cpp SECPK1/SECP256K1.cpp \
+	GPU/GPUEngine.o Kangaroo.cpp HashTable.cpp \
+	Backup.cpp Thread.cpp Check.cpp Merge.cpp PartMerge.cpp
 OBJDIR = obj
-
 OBJET = $(addprefix $(OBJDIR)/, \
-      SECPK1/IntGroup.o main.o SECPK1/Random.o \
-      Timer.o SECPK1/Int.o SECPK1/IntMod.o \
-      SECPK1/Point.o SECPK1/SECP256K1.o \
-      GPU/GPUEngine.o Kangaroo.o HashTable.o Thread.o \
-      Backup.o Check.o Merge.o PartMerge.o)
-
+	SECPK1/IntGroup.o main.o SECPK1/Random.o \
+	Timer.o SECPK1/Int.o SECPK1/IntMod.o \
+	SECPK1/Point.o SECPK1/SECP256K1.o \
+	GPU/GPUEngine.o Kangaroo.o HashTable.o Thread.o \
+	Backup.o Check.o Merge.o PartMerge.o)
 else
-
 SRC = SECPK1/IntGroup.cpp main.cpp SECPK1/Random.cpp \
-      Timer.cpp SECPK1/Int.cpp SECPK1/IntMod.cpp \
-      SECPK1/Point.cpp SECPK1/SECP256K1.cpp \
-      Kangaroo.cpp HashTable.cpp Thread.cpp Check.cpp \
-      Backup.cpp Merge.cpp PartMerge.cpp
-
+	Timer.cpp SECPK1/Int.cpp SECPK1/IntMod.cpp \
+	SECPK1/Point.cpp SECPK1/SECP256K1.cpp \
+	Kangaroo.cpp HashTable.cpp Thread.cpp Check.cpp \
+	Backup.cpp Merge.cpp PartMerge.cpp
 OBJDIR = obj
-
 OBJET = $(addprefix $(OBJDIR)/, \
-      SECPK1/IntGroup.o main.o SECPK1/Random.o \
-      Timer.o SECPK1/Int.o SECPK1/IntMod.o \
-      SECPK1/Point.o SECPK1/SECP256K1.o \
-      Kangaroo.o HashTable.o Thread.o Check.o Backup.o \
-      Merge.o PartMerge.o)
-
+	SECPK1/IntGroup.o main.o SECPK1/Random.o \
+	Timer.o SECPK1/Int.o SECPK1/IntMod.o \
+	SECPK1/Point.o SECPK1/SECP256K1.o \
+	Kangaroo.o HashTable.o Thread.o Check.o Backup.o \
+	Merge.o PartMerge.o)
 endif
 
-CXX        = g++
-CUDA       = /usr/local/cuda
-CXXCUDA    = /usr/bin/g++
-NVCC       = $(CUDA)/bin/nvcc
+CXX = g++
+CUDA = /usr/local/cuda
+CXXCUDA = /usr/bin/g++
+NVCC = $(CUDA)/bin/nvcc
 
 all: driverquery bsgs
 
@@ -45,7 +37,7 @@ ifdef gpu
 ifndef ccap
 driverquery:
 	. ./detect_cuda.sh
-ccap=$(shell cat cuda_version.txt)
+	ccap=$(shell cat cuda_version.txt)
 else
 driverquery:
 	@echo "Compiling against manually selected CUDA version ${ccap}"
@@ -55,33 +47,25 @@ driverquery:
 endif
 
 ifdef gpu
-
 ifdef debug
-CXXFLAGS   = -DWITHGPU -m64 -mssse3 -Wno-unused-result -Wno-write-strings -g -I. -I$(CUDA)/include
+CXXFLAGS = -DWITHGPU -m64 -mssse3 -Wno-unused-result -Wno-write-strings -g -I. -I$(CUDA)/include
 else
-CXXFLAGS   = -DWITHGPU -m64 -mssse3 -Wno-unused-result -Wno-write-strings -O2 -I. -I$(CUDA)/include
+CXXFLAGS = -DWITHGPU -m64 -mssse3 -Wno-unused-result -Wno-write-strings -O2 -I. -I$(CUDA)/include
 endif
-LFLAGS     = -lpthread -L$(CUDA)/lib64 -lcudart
-
+LFLAGS = -lpthread -L$(CUDA)/lib64 -lcudart
 else
-
 ifdef cpu
 CXXFLAGS = -m64 -march=native -mtune=native -mssse3 -Wno-unused-result -Wno-write-strings -pthread -ftree-vectorize -flto -O3 -funroll-loops -finline-functions -I.
 LFLAGS = -lpthread
-
 else
-
 ifdef debug
-CXXFLAGS   = -m64 -mssse3 -Wno-unused-result -Wno-write-strings -g -I. -I$(CUDA)/include
+CXXFLAGS = -m64 -mssse3 -Wno-unused-result -Wno-write-strings -g -I. -I$(CUDA)/include
 else
-CXXFLAGS   = -m64 -mssse3 -Wno-unused-result -Wno-write-strings -O2 -I. -I$(CUDA)/include
+CXXFLAGS = -m64 -mssse3 -Wno-unused-result -Wno-write-strings -O2 -I. -I$(CUDA)/include
 endif
-LFLAGS     = -lpthread
-
+LFLAGS = -lpthread
 endif
 endif
-
-#--------------------------------------------------------------------
 
 ifdef gpu
 ifdef debug
@@ -109,7 +93,7 @@ $(OBJDIR)/GPU: $(OBJDIR)
 	cd $(OBJDIR) && mkdir -p GPU
 
 $(OBJDIR)/SECPK1: $(OBJDIR)
-	cd $(OBJDIR) &&	mkdir -p SECPK1
+	cd $(OBJDIR) && mkdir -p SECPK1
 
 clean:
 	@echo Cleaning...
@@ -117,6 +101,5 @@ clean:
 	@rm -f obj/*.o
 	@rm -f obj/GPU/*.o
 	@rm -f obj/SECPK1/*.o
-	@rm -f deviceQuery/*.o
 	@rm -f cuda_version.txt
 	@rm -f deviceQuery/cuda_build_log.txt
