@@ -603,12 +603,10 @@ void Kangaroo::Run(int nbThread, std::vector<int> gpuId, std::vector<int> gridSi
         ::printf("No CPU or GPU thread, exiting.\n");
         ::exit(0);
     }
-
     TH_PARAM *params = (TH_PARAM *)malloc(totalThread * sizeof(TH_PARAM));
     THREAD_HANDLE *thHandles = (THREAD_HANDLE *)malloc(totalThread * sizeof(THREAD_HANDLE));
     memset(params, 0, totalThread * sizeof(TH_PARAM));
     memset(counters, 0, sizeof(counters));
-
     ::printf("[+] Number of CPU thread: %d\n", nbCPUThread);
 #ifdef WITHGPU
     for (int i = 0; i < nbGPUThread; i++) {
@@ -630,7 +628,7 @@ void Kangaroo::Run(int nbThread, std::vector<int> gpuId, std::vector<int> gridSi
     InitRange();
     CreateJumpTable();
     ::printf("[+] Number of kangaroos: 2^%.2f\n", log2((double)totalRW));
-    
+
     int suggestedDP = initDPSize;
     double dpOverHead;
     ComputeExpected((double)suggestedDP, &expectedNbOp, &expectedMem, &dpOverHead);
@@ -640,14 +638,13 @@ void Kangaroo::Run(int nbThread, std::vector<int> gpuId, std::vector<int> gridSi
     }
     if (initDPSize < 0) initDPSize = suggestedDP;
     ComputeExpected((double)initDPSize, &expectedNbOp, &expectedMem);
-    
+
     ::printf("[+] Expected operations: 2^%.2f\n", log2(expectedNbOp));
-    
+
     keyIdx = 0;
     InitSearchKey();
     SetDP(initDPSize);
     FectchKangaroos(params);
-
 #ifdef STATS
     CPU_GRP_SIZE = 1024;
     for (; CPU_GRP_SIZE <= 1024; CPU_GRP_SIZE *= 4) {
@@ -662,11 +659,9 @@ void Kangaroo::Run(int nbThread, std::vector<int> gpuId, std::vector<int> gridSi
             for (int i = 0; i < nbCPUThread; i++) {
                 params[i].threadId = i;
                 params[i].isRunning = true;
-                thHandles[i] = LaunchThread([](void* p) -> void* {
-                    TH_PARAM* param = static_cast<TH_PARAM*>(p);
+                thHandles[i] = LaunchThread(std::function<void(TH_PARAM*)>([](TH_PARAM* param) {
                     param->obj->SolveKeyCPU(param);
-                    return nullptr;
-                }, params + i);
+                }), params + i);
             }
 #ifdef WITHGPU
             for (int i = 0; i < nbGPUThread; i++) {
@@ -674,7 +669,10 @@ void Kangaroo::Run(int nbThread, std::vector<int> gpuId, std::vector<int> gridSi
                 params[id].threadId = 0x80L + i;
                 params[id].isRunning = true;
                 params[id].gpuId = gpuId[i];
-                thHandles[id] = LaunchThread(_SolveKeyGPU, params + id);
+
+                thHandles[id] = LaunchThread(std::function<void(TH_PARAM*)>([this](TH_PARAM* param) {
+                    SolveKeyGPU(param);
+                }), params + id);
             }
 #endif
             Process(params, "MK/s");
