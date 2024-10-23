@@ -7,7 +7,6 @@
 #ifndef WIN64
 #include <pthread.h>
 #endif
-
 using namespace std;
 
 // ----------------------------------------------------------------------------
@@ -15,6 +14,16 @@ using namespace std;
 THREAD_HANDLE Kangaroo::LaunchThread(LPTHREAD_START_ROUTINE func, TH_PARAM *p) {
     p->obj = this;
     return CreateThread(NULL, 0, func, (void*)(p), 0, NULL);
+}
+
+THREAD_HANDLE Kangaroo::LaunchThread(std::function<void(TH_PARAM*)> func, TH_PARAM *p) {
+    p->obj = this;
+    return CreateThread(NULL, 0, [](LPVOID lpParam) -> DWORD {
+        auto* params = static_cast<std::pair<std::function<void(TH_PARAM*)>, TH_PARAM*>*>(lpParam);
+        params->first(params->second);
+        delete params;
+        return 0;
+    }, new std::pair<std::function<void(TH_PARAM*)>, TH_PARAM*>(func, p), 0, NULL);
 }
 
 void Kangaroo::JoinThreads(THREAD_HANDLE *handles, int nbThread) {
@@ -26,19 +35,34 @@ void Kangaroo::FreeHandles(THREAD_HANDLE *handles, int nbThread) {
         CloseHandle(handles[i]);
 }
 #else
-THREAD_HANDLE Kangaroo::LaunchThread(void *(*func) (void *), TH_PARAM *p) {
+THREAD_HANDLE Kangaroo::LaunchThread(void *(*func)(void*), TH_PARAM *p) {
     THREAD_HANDLE h;
     p->obj = this;
     pthread_create(&h, NULL, func, (void*)(p));
     return h;
 }
 
+THREAD_HANDLE Kangaroo::LaunchThread(std::function<void(TH_PARAM*)> func, TH_PARAM *p) {
+    p->obj = this;
+    auto params = new std::pair<std::function<void(TH_PARAM*)>, TH_PARAM*>(func, p);
+    THREAD_HANDLE handle;
+    pthread_create(&handle, nullptr, [](void* lpParam) -> void* {
+        auto* params = static_cast<std::pair<std::function<void(TH_PARAM*)>, TH_PARAM*>*>(lpParam);
+        params->first(params->second);
+        delete params;
+        return nullptr;
+    }, params);
+    return handle;
+}
+
 void Kangaroo::JoinThreads(THREAD_HANDLE *handles, int nbThread) {
     for (int i = 0; i < nbThread; i++)
         pthread_join(handles[i], NULL);
 }
+
 void Kangaroo::FreeHandles(THREAD_HANDLE *handles, int nbThread) {}
 #endif
+
 // ----------------------------------------------------------------------------
 bool Kangaroo::isAlive(TH_PARAM *p) {
     bool isAlive = false;
