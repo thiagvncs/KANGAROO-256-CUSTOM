@@ -463,7 +463,6 @@ void Kangaroo::SolveKeyGPU(TH_PARAM *ph) {
     safe_delete_array(ph->px);
     safe_delete_array(ph->py);
     safe_delete_array(ph->distance);
-    delete gpu;
 
 #else
     ph->hasStarted = true;
